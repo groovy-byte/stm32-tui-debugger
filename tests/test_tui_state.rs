@@ -1,6 +1,6 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use stm32_tui_debugger::tui::keybindings::{map_key, Command};
-use stm32_tui_debugger::tui::state::{ConsoleState, PaneId, TuiState};
+use stm32_tui_debugger::tui::state::{ConsoleState, InputMode, PaneId, TuiState};
 
 // ── PaneId::next() ──────────────────────────────────────────────────────
 
@@ -174,7 +174,7 @@ fn key_with_mod(code: KeyCode, modifiers: KeyModifiers) -> KeyEvent {
 
 #[test]
 fn should_map_q_to_quit() {
-    let cmd = map_key(&key(KeyCode::Char('q')), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Char('q')), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::Quit)));
 }
 
@@ -183,13 +183,14 @@ fn should_map_ctrl_c_to_quit() {
     let cmd = map_key(
         &key_with_mod(KeyCode::Char('c'), KeyModifiers::CONTROL),
         PaneId::Source,
+        InputMode::Normal,
     );
     assert!(matches!(cmd, Some(Command::Quit)));
 }
 
 #[test]
 fn should_map_tab_to_next_pane() {
-    let cmd = map_key(&key(KeyCode::Tab), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Tab), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::NextPane)));
 }
 
@@ -198,37 +199,38 @@ fn should_map_shift_backtab_to_prev_pane() {
     let cmd = map_key(
         &key_with_mod(KeyCode::BackTab, KeyModifiers::SHIFT),
         PaneId::Source,
+        InputMode::Normal,
     );
     assert!(matches!(cmd, Some(Command::PrevPane)));
 }
 
 #[test]
 fn should_map_f5_to_resume_target() {
-    let cmd = map_key(&key(KeyCode::F(5)), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::F(5)), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::ResumeTarget)));
 }
 
 #[test]
 fn should_map_f6_to_halt_target() {
-    let cmd = map_key(&key(KeyCode::F(6)), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::F(6)), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::HaltTarget)));
 }
 
 #[test]
 fn should_map_f7_to_reset_target() {
-    let cmd = map_key(&key(KeyCode::F(7)), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::F(7)), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::ResetTarget)));
 }
 
 #[test]
 fn should_map_f10_to_step_over() {
-    let cmd = map_key(&key(KeyCode::F(10)), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::F(10)), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::StepOver)));
 }
 
 #[test]
 fn should_map_f11_to_step_into() {
-    let cmd = map_key(&key(KeyCode::F(11)), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::F(11)), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::StepInto)));
 }
 
@@ -236,49 +238,49 @@ fn should_map_f11_to_step_into() {
 
 #[test]
 fn should_map_up_to_scroll_up() {
-    let cmd = map_key(&key(KeyCode::Up), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Up), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::ScrollUp)));
 }
 
 #[test]
 fn should_map_k_to_scroll_up() {
-    let cmd = map_key(&key(KeyCode::Char('k')), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Char('k')), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::ScrollUp)));
 }
 
 #[test]
 fn should_map_down_to_scroll_down() {
-    let cmd = map_key(&key(KeyCode::Down), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Down), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::ScrollDown)));
 }
 
 #[test]
 fn should_map_j_to_scroll_down() {
-    let cmd = map_key(&key(KeyCode::Char('j')), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Char('j')), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::ScrollDown)));
 }
 
 #[test]
 fn should_map_page_up() {
-    let cmd = map_key(&key(KeyCode::PageUp), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::PageUp), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::PageUp)));
 }
 
 #[test]
 fn should_map_page_down() {
-    let cmd = map_key(&key(KeyCode::PageDown), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::PageDown), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::PageDown)));
 }
 
 #[test]
 fn should_map_enter_to_select() {
-    let cmd = map_key(&key(KeyCode::Enter), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Enter), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::Select)));
 }
 
 #[test]
 fn should_map_esc_to_back() {
-    let cmd = map_key(&key(KeyCode::Esc), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Esc), PaneId::Source, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::Back)));
 }
 
@@ -286,37 +288,37 @@ fn should_map_esc_to_back() {
 
 #[test]
 fn should_map_space_to_toggle_expand_in_peripherals() {
-    let cmd = map_key(&key(KeyCode::Char(' ')), PaneId::Peripherals);
+    let cmd = map_key(&key(KeyCode::Char(' ')), PaneId::Peripherals, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::ToggleExpand)));
 }
 
 #[test]
 fn should_not_map_space_in_source_pane() {
-    let cmd = map_key(&key(KeyCode::Char(' ')), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Char(' ')), PaneId::Source, InputMode::Normal);
     assert!(cmd.is_none());
 }
 
 #[test]
 fn should_map_a_to_add_expression_in_expressions() {
-    let cmd = map_key(&key(KeyCode::Char('a')), PaneId::Expressions);
+    let cmd = map_key(&key(KeyCode::Char('a')), PaneId::Expressions, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::AddExpression)));
 }
 
 #[test]
 fn should_map_d_to_remove_expression_in_expressions() {
-    let cmd = map_key(&key(KeyCode::Char('d')), PaneId::Expressions);
+    let cmd = map_key(&key(KeyCode::Char('d')), PaneId::Expressions, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::RemoveExpression)));
 }
 
 #[test]
 fn should_not_map_a_outside_expressions_pane() {
-    let cmd = map_key(&key(KeyCode::Char('a')), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Char('a')), PaneId::Source, InputMode::Normal);
     assert!(cmd.is_none());
 }
 
 #[test]
 fn should_return_none_for_unmapped_key() {
-    let cmd = map_key(&key(KeyCode::Char('z')), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Char('z')), PaneId::Source, InputMode::Normal);
     assert!(cmd.is_none());
 }
 
@@ -325,7 +327,7 @@ fn should_return_none_for_unmapped_key() {
 #[test]
 fn should_map_quit_from_all_panes() {
     for pane in PaneId::all() {
-        let cmd = map_key(&key(KeyCode::Char('q')), *pane);
+        let cmd = map_key(&key(KeyCode::Char('q')), *pane, InputMode::Normal);
         assert!(matches!(cmd, Some(Command::Quit)), "q should quit in {pane:?}");
     }
 }
@@ -333,7 +335,7 @@ fn should_map_quit_from_all_panes() {
 #[test]
 fn should_map_tab_from_all_panes() {
     for pane in PaneId::all() {
-        let cmd = map_key(&key(KeyCode::Tab), *pane);
+        let cmd = map_key(&key(KeyCode::Tab), *pane, InputMode::Normal);
         assert!(
             matches!(cmd, Some(Command::NextPane)),
             "Tab should move pane in {pane:?}"

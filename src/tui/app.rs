@@ -52,7 +52,7 @@ pub fn draw(f: &mut Frame, state: &TuiState) {
     panes::source::draw(f, top_chunks[0], &state.source_state, state.focused == PaneId::Source);
     panes::peripherals::draw(f, right_chunks[0], &state.peripheral_state, state.focused == PaneId::Peripherals);
     panes::tasks::draw(f, right_chunks[1], &state.tasks_state, state.focused == PaneId::Tasks);
-    panes::expressions::draw(f, bottom_chunks[0], &state.expression_state, state.focused == PaneId::Expressions);
+    panes::expressions::draw(f, bottom_chunks[0], &state.expression_state, &state.input, state.input_mode, state.focused == PaneId::Expressions);
     panes::console::draw(f, bottom_chunks[1], &state.console_state, state.focused == PaneId::Console);
 
     // Status bar

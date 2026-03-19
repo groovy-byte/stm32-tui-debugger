@@ -8,6 +8,11 @@ use crate::probe::worker::{ProbeHandle, MemReadRequest};
 use crate::symbols::SymbolEngine;
 use super::types::{DisplayValue, Expression, PollResult, ValueFormat};
 
+pub enum PollerCommand {
+    Add(Expression),
+    Remove(String),
+}
+
 pub struct PollerEngine {
     expressions: Vec<Expression>,
     last_values: HashMap<String, DisplayValue>,
@@ -53,6 +58,7 @@ impl PollerEngine {
         mut self,
         probe: ProbeHandle,
         tx: mpsc::Sender<PollResult>,
+        mut cmd_rx: mpsc::Receiver<PollerCommand>,
         mut shutdown: tokio::sync::watch::Receiver<bool>,
     ) {
         let period = Duration::from_millis(1000 / self.poll_rate_hz.max(1) as u64);
@@ -62,6 +68,17 @@ impl PollerEngine {
             tokio::select! {
                 _ = ticker.tick() => {
                     self.poll_once(&probe, &tx).await;
+                }
+                Some(cmd) = cmd_rx.recv() => {
+                    match cmd {
+                        PollerCommand::Add(expr) => {
+                            self.expressions.push(expr);
+                        }
+                        PollerCommand::Remove(id) => {
+                            self.expressions.retain(|e| e.id != id);
+                            self.last_values.remove(&id);
+                        }
+                    }
                 }
                 _ = shutdown.changed() => {
                     debug!("Poller shutdown requested");

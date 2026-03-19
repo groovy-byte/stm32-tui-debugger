@@ -1,6 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use stm32_tui_debugger::rtos::{RtosSnapshot, TaskInfo, TaskState, TcbLayout};
 use stm32_tui_debugger::tui::keybindings::{map_key, Command};
+use stm32_tui_debugger::tui::state::InputMode;
 use stm32_tui_debugger::tui::state::{PaneId, TasksState};
 
 // ── Helper ──────────────────────────────────────────────────────────────
@@ -323,44 +324,44 @@ fn should_implement_default_trait_for_tasks_state() {
 
 #[test]
 fn should_map_r_to_refresh_tasks_in_tasks_pane() {
-    let cmd = map_key(&key(KeyCode::Char('r')), PaneId::Tasks);
+    let cmd = map_key(&key(KeyCode::Char('r')), PaneId::Tasks, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::RefreshTasks)));
 }
 
 #[test]
 fn should_map_i_to_inspect_task_in_tasks_pane() {
-    let cmd = map_key(&key(KeyCode::Char('i')), PaneId::Tasks);
+    let cmd = map_key(&key(KeyCode::Char('i')), PaneId::Tasks, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::InspectTask)));
 }
 
 #[test]
 fn should_map_enter_to_inspect_task_in_tasks_pane() {
-    let cmd = map_key(&key(KeyCode::Enter), PaneId::Tasks);
+    let cmd = map_key(&key(KeyCode::Enter), PaneId::Tasks, InputMode::Normal);
     assert!(matches!(cmd, Some(Command::InspectTask)));
 }
 
 #[test]
 fn should_not_map_r_to_refresh_in_source_pane() {
-    let cmd = map_key(&key(KeyCode::Char('r')), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Char('r')), PaneId::Source, InputMode::Normal);
     assert!(cmd.is_none());
 }
 
 #[test]
 fn should_not_map_r_to_refresh_in_console_pane() {
-    let cmd = map_key(&key(KeyCode::Char('r')), PaneId::Console);
+    let cmd = map_key(&key(KeyCode::Char('r')), PaneId::Console, InputMode::Normal);
     assert!(cmd.is_none());
 }
 
 #[test]
 fn should_not_map_i_outside_tasks_pane() {
-    let cmd = map_key(&key(KeyCode::Char('i')), PaneId::Source);
+    let cmd = map_key(&key(KeyCode::Char('i')), PaneId::Source, InputMode::Normal);
     assert!(cmd.is_none());
 }
 
 #[test]
 fn should_map_enter_to_select_in_non_tasks_panes() {
     for pane in &[PaneId::Source, PaneId::Peripherals, PaneId::Expressions, PaneId::Console] {
-        let cmd = map_key(&key(KeyCode::Enter), *pane);
+        let cmd = map_key(&key(KeyCode::Enter), *pane, InputMode::Normal);
         assert!(
             matches!(cmd, Some(Command::Select)),
             "Enter should be Select in {pane:?}"
@@ -371,12 +372,12 @@ fn should_map_enter_to_select_in_non_tasks_panes() {
 #[test]
 fn should_map_global_keys_from_tasks_pane() {
     // Global keys must still work when Tasks pane is focused
-    let quit = map_key(&key(KeyCode::Char('q')), PaneId::Tasks);
+    let quit = map_key(&key(KeyCode::Char('q')), PaneId::Tasks, InputMode::Normal);
     assert!(matches!(quit, Some(Command::Quit)));
 
-    let tab = map_key(&key(KeyCode::Tab), PaneId::Tasks);
+    let tab = map_key(&key(KeyCode::Tab), PaneId::Tasks, InputMode::Normal);
     assert!(matches!(tab, Some(Command::NextPane)));
 
-    let resume = map_key(&key(KeyCode::F(5)), PaneId::Tasks);
+    let resume = map_key(&key(KeyCode::F(5)), PaneId::Tasks, InputMode::Normal);
     assert!(matches!(resume, Some(Command::ResumeTarget)));
 }

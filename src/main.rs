@@ -14,12 +14,13 @@ use tokio::sync::{mpsc, watch};
 
 use stm32_tui_debugger::{
     config::{Cli, Config},
-    poller::{PollerEngine, PollResult},
+    poller::{Expression, PollerCommand, PollerEngine, PollResult},
     probe::ProbeHandle,
     rtos::RtosSnapshot,
     svd::{PeripheralRegistry, SvdDevice, SvdFetcher},
     symbols::SymbolEngine,
     tui::{AppEvent, Command, EventReader, PaneId, TuiState},
+    tui::state::{InputMode, ExpressionEntry},
 };
 
 #[tokio::main]
@@ -130,6 +131,7 @@ async fn run_app(
 
     // ── Spawn poller task ─────────────────────────────────────────────
     let (poll_tx, mut poll_rx) = mpsc::channel::<PollResult>(100);
+    let (cmd_tx, cmd_rx) = mpsc::channel::<PollerCommand>(64);
     if let Some(ref syms) = symbols {
         let mut poller = PollerEngine::new(config.poll_rate_hz);
         poller.resolve_symbols(syms);
@@ -137,7 +139,7 @@ async fn run_app(
         let shutdown_rx_poller = shutdown_rx.clone();
         tokio::spawn(async move {
             poller
-                .run(probe_clone, poll_tx, shutdown_rx_poller)
+                .run(probe_clone, poll_tx, cmd_rx, shutdown_rx_poller)
                 .await;
         });
     }
@@ -183,9 +185,10 @@ async fn run_app(
                             let cmd = stm32_tui_debugger::tui::keybindings::map_key(
                                 &key_event,
                                 tui_state.focused,
+                                tui_state.input_mode,
                             );
                             if let Some(cmd) = cmd {
-                                if handle_command(cmd, &mut tui_state, &probe).await {
+                                if handle_command(cmd, &mut tui_state, &probe, &symbols, &cmd_tx).await {
                                     break; // Quit requested
                                 }
                             }
@@ -261,6 +264,8 @@ async fn handle_command(
     cmd: Command,
     state: &mut TuiState,
     probe: &ProbeHandle,
+    symbols: &Option<Arc<SymbolEngine>>,
+    cmd_tx: &mpsc::Sender<PollerCommand>,
 ) -> bool {
     match cmd {
         Command::Quit => return true,
@@ -318,12 +323,90 @@ async fn handle_command(
             }
         }
 
+        // ── Input mode: open ──
+        Command::AddExpression => {
+            state.input_mode = InputMode::InputExpression;
+            state.input.clear();
+            state.input.prompt = "watch: ".into();
+        }
+
+        // ── Input mode: text editing ──
+        Command::InputChar(c) => state.input.insert_char(c),
+        Command::InputBackspace => state.input.backspace(),
+        Command::InputDelete => state.input.delete_char(),
+        Command::InputLeft => state.input.move_left(),
+        Command::InputRight => state.input.move_right(),
+        Command::InputHome => state.input.home(),
+        Command::InputEnd => state.input.end(),
+        Command::InputHistoryUp => state.input.history_up(),
+        Command::InputHistoryDown => state.input.history_down(),
+
+        // ── Input mode: cancel ──
+        Command::InputCancel => {
+            state.input.cancel();
+            state.input_mode = InputMode::Normal;
+        }
+
+        // ── Input mode: submit ──
+        Command::InputSubmit => {
+            let name = state.input.submit();
+            if !name.is_empty() {
+                match state.input_mode {
+                    InputMode::InputExpression => {
+                        if let Some(ref syms) = symbols {
+                            match syms.resolve_variable(&name) {
+                                Ok(var) => {
+                                    let mut expr = Expression::new(&name);
+                                    expr.address = Some(var.address);
+                                    expr.size = Some(var.size);
+                                    let _ = cmd_tx.send(PollerCommand::Add(expr)).await;
+                                    state.expression_state.entries.push(ExpressionEntry {
+                                        name: name.clone(),
+                                        value: "...".into(),
+                                        changed: false,
+                                    });
+                                    state.console_state.lines.push_back(
+                                        format!("[INFO] Watching: {} @ 0x{:08x} ({} bytes)", name, var.address, var.size)
+                                    );
+                                }
+                                Err(e) => {
+                                    state.console_state.lines.push_back(
+                                        format!("[ERROR] Symbol not found: {name} — {e}")
+                                    );
+                                }
+                            }
+                        } else {
+                            state.console_state.lines.push_back(
+                                "[ERROR] No ELF loaded — cannot resolve symbols".into()
+                            );
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            state.input_mode = InputMode::Normal;
+        }
+
+        // ── Remove expression ──
+        Command::RemoveExpression => {
+            if let Some(idx) = state.expression_state.selected {
+                if idx < state.expression_state.entries.len() {
+                    let name = state.expression_state.entries[idx].name.clone();
+                    state.expression_state.entries.remove(idx);
+                    let _ = cmd_tx.send(PollerCommand::Remove(name)).await;
+                    if state.expression_state.entries.is_empty() {
+                        state.expression_state.selected = None;
+                    } else if idx >= state.expression_state.entries.len() {
+                        state.expression_state.selected = Some(state.expression_state.entries.len() - 1);
+                    }
+                }
+            }
+        }
+
         // Remaining commands are stubs for now
         Command::Select
         | Command::Back
         | Command::ToggleExpand
-        | Command::AddExpression
-        | Command::RemoveExpression
         | Command::StepOver
         | Command::StepInto => {}
 

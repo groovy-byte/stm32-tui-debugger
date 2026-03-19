@@ -1,5 +1,7 @@
 use std::collections::VecDeque;
 
+use crate::tui::widgets::TextInput;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PaneId {
     Source,
@@ -41,6 +43,19 @@ impl PaneId {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum InputMode {
+    Normal,
+    InputExpression,
+    InputCommand,
+}
+
+impl Default for InputMode {
+    fn default() -> Self {
+        Self::Normal
+    }
+}
+
 pub struct TuiState {
     pub focused: PaneId,
     pub source_state: SourceState,
@@ -50,6 +65,8 @@ pub struct TuiState {
     pub console_state: ConsoleState,
     pub status_message: Option<String>,
     pub running: bool,
+    pub input_mode: InputMode,
+    pub input: TextInput,
 }
 
 impl TuiState {
@@ -63,6 +80,8 @@ impl TuiState {
             console_state: ConsoleState::new(),
             status_message: None,
             running: true,
+            input_mode: InputMode::Normal,
+            input: TextInput::new(),
         }
     }
 }

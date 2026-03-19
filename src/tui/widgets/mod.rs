@@ -1,1 +1,3 @@
-// Custom widgets will be added as needed (register tree, syntax highlighting)
+pub mod input;
+
+pub use input::TextInput;

@@ -1,5 +1,5 @@
 use crossterm::event::{KeyCode, KeyModifiers, KeyEvent};
-use super::state::PaneId;
+use super::state::{PaneId, InputMode};
 
 pub enum Command {
     Quit,
@@ -21,9 +21,26 @@ pub enum Command {
     StepInto,
     RefreshTasks,
     InspectTask,
+
+    // Input mode commands
+    InputChar(char),
+    InputBackspace,
+    InputDelete,
+    InputLeft,
+    InputRight,
+    InputHome,
+    InputEnd,
+    InputSubmit,
+    InputCancel,
+    InputHistoryUp,
+    InputHistoryDown,
 }
 
-pub fn map_key(key: &KeyEvent, focused: PaneId) -> Option<Command> {
+pub fn map_key(key: &KeyEvent, focused: PaneId, input_mode: InputMode) -> Option<Command> {
+    if input_mode != InputMode::Normal {
+        return map_input_key(key);
+    }
+
     // Global keys (work regardless of focused pane)
     match (key.modifiers, key.code) {
         (KeyModifiers::CONTROL, KeyCode::Char('c')) => return Some(Command::Quit),
@@ -54,6 +71,23 @@ pub fn map_key(key: &KeyEvent, focused: PaneId) -> Option<Command> {
         KeyCode::Char('d') if focused == PaneId::Expressions => Some(Command::RemoveExpression),
         KeyCode::Char('r') if focused == PaneId::Tasks => Some(Command::RefreshTasks),
         KeyCode::Char('i') if focused == PaneId::Tasks => Some(Command::InspectTask),
+        _ => None,
+    }
+}
+
+fn map_input_key(key: &KeyEvent) -> Option<Command> {
+    match key.code {
+        KeyCode::Char(c) => Some(Command::InputChar(c)),
+        KeyCode::Backspace => Some(Command::InputBackspace),
+        KeyCode::Delete => Some(Command::InputDelete),
+        KeyCode::Left => Some(Command::InputLeft),
+        KeyCode::Right => Some(Command::InputRight),
+        KeyCode::Home => Some(Command::InputHome),
+        KeyCode::End => Some(Command::InputEnd),
+        KeyCode::Enter => Some(Command::InputSubmit),
+        KeyCode::Esc => Some(Command::InputCancel),
+        KeyCode::Up => Some(Command::InputHistoryUp),
+        KeyCode::Down => Some(Command::InputHistoryDown),
         _ => None,
     }
 }
