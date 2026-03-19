@@ -186,6 +186,7 @@ async fn run_app(
                                 &key_event,
                                 tui_state.focused,
                                 tui_state.input_mode,
+                                tui_state.completion.is_active(),
                             );
                             if let Some(cmd) = cmd {
                                 if handle_command(cmd, &mut tui_state, &probe, &symbols, &cmd_tx).await {
@@ -328,22 +329,45 @@ async fn handle_command(
             state.input_mode = InputMode::InputExpression;
             state.input.clear();
             state.input.prompt = "watch: ".into();
+            state.completion.clear();
         }
 
         // ── Input mode: text editing ──
-        Command::InputChar(c) => state.input.insert_char(c),
-        Command::InputBackspace => state.input.backspace(),
-        Command::InputDelete => state.input.delete_char(),
+        Command::InputChar(c) => {
+            state.input.insert_char(c);
+            update_completions(state, symbols);
+        }
+        Command::InputBackspace => {
+            state.input.backspace();
+            update_completions(state, symbols);
+        }
+        Command::InputDelete => {
+            state.input.delete_char();
+            update_completions(state, symbols);
+        }
         Command::InputLeft => state.input.move_left(),
         Command::InputRight => state.input.move_right(),
         Command::InputHome => state.input.home(),
         Command::InputEnd => state.input.end(),
-        Command::InputHistoryUp => state.input.history_up(),
-        Command::InputHistoryDown => state.input.history_down(),
+        Command::InputHistoryUp => {
+            if state.completion.is_active() {
+                state.completion.select_prev();
+            } else {
+                state.input.history_up();
+            }
+        }
+        Command::InputHistoryDown => {
+            if state.completion.is_active() {
+                state.completion.select_next();
+            } else {
+                state.input.history_down();
+            }
+        }
 
         // ── Input mode: cancel ──
         Command::InputCancel => {
             state.input.cancel();
+            state.completion.clear();
             state.input_mode = InputMode::Normal;
         }
 
@@ -384,6 +408,7 @@ async fn handle_command(
                     _ => {}
                 }
             }
+            state.completion.clear();
             state.input_mode = InputMode::Normal;
         }
 
@@ -404,6 +429,16 @@ async fn handle_command(
         }
 
         // Remaining commands are stubs for now
+        Command::CompletionAccept => {
+            if let Some(item) = state.completion.accept() {
+                let text = item.text.clone();
+                state.input.buffer.clear();
+                state.input.buffer.push_str(&text);
+                state.input.cursor = text.len();
+                state.completion.clear();
+            }
+        }
+
         Command::Select
         | Command::Back
         | Command::ToggleExpand
@@ -512,5 +547,37 @@ fn scroll_down(state: &mut TuiState) {
         PaneId::Console => {
             state.console_state.scroll_offset += 1;
         }
+    }
+}
+
+fn update_completions(state: &mut TuiState, symbols: &Option<Arc<SymbolEngine>>) {
+    use stm32_tui_debugger::tui::widgets::CompletionItem;
+
+    if state.input_mode != InputMode::InputExpression {
+        state.completion.clear();
+        return;
+    }
+
+    let prefix = state.input.content();
+    if prefix.is_empty() {
+        state.completion.clear();
+        return;
+    }
+
+    if let Some(ref syms) = symbols {
+        let matches = syms.elf.find_variables_by_prefix(prefix);
+        let items: Vec<CompletionItem> = matches
+            .into_iter()
+            .take(50)
+            .map(|v| CompletionItem {
+                text: v.name.clone(),
+                detail: if v.type_name.is_empty() {
+                    format!("{} bytes @ 0x{:08x}", v.size, v.address)
+                } else {
+                    format!("{} ({} bytes)", v.type_name, v.size)
+                },
+            })
+            .collect();
+        state.completion.update(items);
     }
 }

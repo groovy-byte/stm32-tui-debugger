@@ -1,6 +1,6 @@
 use std::collections::VecDeque;
 
-use crate::tui::widgets::TextInput;
+use crate::tui::widgets::{CompletionList, TextInput};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PaneId {
@@ -67,6 +67,7 @@ pub struct TuiState {
     pub running: bool,
     pub input_mode: InputMode,
     pub input: TextInput,
+    pub completion: CompletionList,
 }
 
 impl TuiState {
@@ -82,6 +83,7 @@ impl TuiState {
             running: true,
             input_mode: InputMode::Normal,
             input: TextInput::new(),
+            completion: CompletionList::new(),
         }
     }
 }

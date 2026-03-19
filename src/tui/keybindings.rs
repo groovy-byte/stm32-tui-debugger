@@ -34,11 +34,12 @@ pub enum Command {
     InputCancel,
     InputHistoryUp,
     InputHistoryDown,
+    CompletionAccept,
 }
 
-pub fn map_key(key: &KeyEvent, focused: PaneId, input_mode: InputMode) -> Option<Command> {
+pub fn map_key(key: &KeyEvent, focused: PaneId, input_mode: InputMode, completion_active: bool) -> Option<Command> {
     if input_mode != InputMode::Normal {
-        return map_input_key(key);
+        return map_input_key(key, completion_active);
     }
 
     // Global keys (work regardless of focused pane)
@@ -75,8 +76,9 @@ pub fn map_key(key: &KeyEvent, focused: PaneId, input_mode: InputMode) -> Option
     }
 }
 
-fn map_input_key(key: &KeyEvent) -> Option<Command> {
+fn map_input_key(key: &KeyEvent, completion_active: bool) -> Option<Command> {
     match key.code {
+        KeyCode::Tab if completion_active => Some(Command::CompletionAccept),
         KeyCode::Char(c) => Some(Command::InputChar(c)),
         KeyCode::Backspace => Some(Command::InputBackspace),
         KeyCode::Delete => Some(Command::InputDelete),

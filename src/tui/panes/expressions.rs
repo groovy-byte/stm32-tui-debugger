@@ -12,6 +12,7 @@ pub fn draw(
     state: &ExpressionState,
     input: &crate::tui::widgets::TextInput,
     input_mode: crate::tui::state::InputMode,
+    completion: &crate::tui::widgets::CompletionList,
     focused: bool,
 ) {
     let border_style = if focused {
@@ -96,5 +97,50 @@ pub fn draw(
         let cursor_span = Span::styled("█", Style::default().fg(Color::White));
         let line = Line::from(vec![prompt_span, text_span, cursor_span]);
         f.render_widget(Paragraph::new(line), input_area);
+
+        // Completion dropdown (rendered above the input line)
+        if completion.is_active() {
+            let visible = completion.visible_items();
+            let dropdown_height = visible.len() as u16;
+
+            let dropdown_area = Rect {
+                x: area.x + 1,
+                y: area.y + area.height.saturating_sub(2 + dropdown_height),
+                width: area.width.saturating_sub(2),
+                height: dropdown_height,
+            };
+
+            f.render_widget(Clear, dropdown_area);
+
+            let selected_vis = completion.visible_selected();
+            for (i, item) in visible.iter().enumerate() {
+                let is_selected = i == selected_vis;
+                let style = if is_selected {
+                    Style::default().bg(Color::DarkGray).fg(Color::White)
+                } else {
+                    Style::default().fg(Color::Gray)
+                };
+
+                let name_span = Span::styled(&item.text, style);
+                let detail_span = Span::styled(
+                    format!("  {}", item.detail),
+                    if is_selected {
+                        Style::default().bg(Color::DarkGray).fg(Color::DarkGray)
+                    } else {
+                        Style::default().fg(Color::DarkGray)
+                    },
+                );
+
+                let row_area = Rect {
+                    x: dropdown_area.x,
+                    y: dropdown_area.y + i as u16,
+                    width: dropdown_area.width,
+                    height: 1,
+                };
+
+                let line = Line::from(vec![name_span, detail_span]);
+                f.render_widget(Paragraph::new(line), row_area);
+            }
+        }
     }
 }

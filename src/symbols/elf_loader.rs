@@ -92,4 +92,30 @@ impl ElfData {
             .iter()
             .find(|f| addr >= f.address && addr < f.address + f.size)
     }
+
+    pub fn find_variables_by_prefix(&self, prefix: &str) -> Vec<&Variable> {
+        let prefix_lower = prefix.to_ascii_lowercase();
+        let mut matches: Vec<&Variable> = self
+            .variables
+            .iter()
+            .filter(|v| v.name.to_ascii_lowercase().starts_with(&prefix_lower))
+            .collect();
+        matches.sort_by(|a, b| a.name.cmp(&b.name));
+        matches
+    }
+
+    pub fn find_functions_by_prefix(&self, prefix: &str) -> Vec<&FunctionInfo> {
+        let prefix_lower = prefix.to_ascii_lowercase();
+        let mut matches: Vec<&FunctionInfo> = self
+            .functions
+            .iter()
+            .filter(|f| f.name.to_ascii_lowercase().starts_with(&prefix_lower))
+            .collect();
+        matches.sort_by(|a, b| a.name.cmp(&b.name));
+        matches
+    }
+
+    pub fn list_variables(&self) -> &[Variable] {
+        &self.variables
+    }
 }

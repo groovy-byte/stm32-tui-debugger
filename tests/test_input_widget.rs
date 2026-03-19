@@ -631,25 +631,25 @@ fn history_down_cursor_at_end_of_entry() {
 
 #[test]
 fn input_mode_char_maps_to_input_char() {
-    let cmd = map_key(&key(KeyCode::Char('a')), PaneId::Source, InputMode::InputExpression);
+    let cmd = map_key(&key(KeyCode::Char('a')), PaneId::Source, InputMode::InputExpression, false);
     assert!(matches!(cmd, Some(Command::InputChar('a'))));
 }
 
 #[test]
 fn input_mode_q_does_not_quit() {
-    let cmd = map_key(&key(KeyCode::Char('q')), PaneId::Source, InputMode::InputExpression);
+    let cmd = map_key(&key(KeyCode::Char('q')), PaneId::Source, InputMode::InputExpression, false);
     assert!(matches!(cmd, Some(Command::InputChar('q'))));
 }
 
 #[test]
 fn input_mode_esc_maps_to_cancel() {
-    let cmd = map_key(&key(KeyCode::Esc), PaneId::Source, InputMode::InputExpression);
+    let cmd = map_key(&key(KeyCode::Esc), PaneId::Source, InputMode::InputExpression, false);
     assert!(matches!(cmd, Some(Command::InputCancel)));
 }
 
 #[test]
 fn input_mode_enter_maps_to_submit() {
-    let cmd = map_key(&key(KeyCode::Enter), PaneId::Source, InputMode::InputExpression);
+    let cmd = map_key(&key(KeyCode::Enter), PaneId::Source, InputMode::InputExpression, false);
     assert!(matches!(cmd, Some(Command::InputSubmit)));
 }
 
@@ -659,6 +659,7 @@ fn input_mode_backspace_maps_to_input_backspace() {
         &key(KeyCode::Backspace),
         PaneId::Source,
         InputMode::InputExpression,
+        false,
     );
     assert!(matches!(cmd, Some(Command::InputBackspace)));
 }
@@ -669,30 +670,31 @@ fn input_mode_delete_maps_to_input_delete() {
         &key(KeyCode::Delete),
         PaneId::Source,
         InputMode::InputExpression,
+        false,
     );
     assert!(matches!(cmd, Some(Command::InputDelete)));
 }
 
 #[test]
 fn input_mode_left_right() {
-    let left = map_key(&key(KeyCode::Left), PaneId::Source, InputMode::InputExpression);
-    let right = map_key(&key(KeyCode::Right), PaneId::Source, InputMode::InputExpression);
+    let left = map_key(&key(KeyCode::Left), PaneId::Source, InputMode::InputExpression, false);
+    let right = map_key(&key(KeyCode::Right), PaneId::Source, InputMode::InputExpression, false);
     assert!(matches!(left, Some(Command::InputLeft)));
     assert!(matches!(right, Some(Command::InputRight)));
 }
 
 #[test]
 fn input_mode_home_end() {
-    let home = map_key(&key(KeyCode::Home), PaneId::Source, InputMode::InputExpression);
-    let end = map_key(&key(KeyCode::End), PaneId::Source, InputMode::InputExpression);
+    let home = map_key(&key(KeyCode::Home), PaneId::Source, InputMode::InputExpression, false);
+    let end = map_key(&key(KeyCode::End), PaneId::Source, InputMode::InputExpression, false);
     assert!(matches!(home, Some(Command::InputHome)));
     assert!(matches!(end, Some(Command::InputEnd)));
 }
 
 #[test]
 fn input_mode_history_up_down() {
-    let up = map_key(&key(KeyCode::Up), PaneId::Source, InputMode::InputExpression);
-    let down = map_key(&key(KeyCode::Down), PaneId::Source, InputMode::InputExpression);
+    let up = map_key(&key(KeyCode::Up), PaneId::Source, InputMode::InputExpression, false);
+    let down = map_key(&key(KeyCode::Down), PaneId::Source, InputMode::InputExpression, false);
     assert!(matches!(up, Some(Command::InputHistoryUp)));
     assert!(matches!(down, Some(Command::InputHistoryDown)));
 }
@@ -700,7 +702,7 @@ fn input_mode_history_up_down() {
 #[test]
 fn input_mode_f5_returns_none() {
     // In input mode, F5 has no mapping in map_input_key
-    let cmd = map_key(&key(KeyCode::F(5)), PaneId::Source, InputMode::InputExpression);
+    let cmd = map_key(&key(KeyCode::F(5)), PaneId::Source, InputMode::InputExpression, false);
     assert!(cmd.is_none());
 }
 
@@ -711,6 +713,7 @@ fn input_mode_ctrl_c_does_not_quit() {
         &ctrl_key(KeyCode::Char('c')),
         PaneId::Source,
         InputMode::InputExpression,
+        false,
     );
     // map_input_key matches on key.code; Char('c') → InputChar('c')
     assert!(matches!(cmd, Some(Command::InputChar('c'))));
@@ -718,49 +721,49 @@ fn input_mode_ctrl_c_does_not_quit() {
 
 #[test]
 fn input_mode_tab_returns_none() {
-    let cmd = map_key(&key(KeyCode::Tab), PaneId::Source, InputMode::InputExpression);
+    let cmd = map_key(&key(KeyCode::Tab), PaneId::Source, InputMode::InputExpression, false);
     assert!(cmd.is_none());
 }
 
 #[test]
 fn input_command_mode_same_routing() {
-    let cmd = map_key(&key(KeyCode::Char('x')), PaneId::Console, InputMode::InputCommand);
+    let cmd = map_key(&key(KeyCode::Char('x')), PaneId::Console, InputMode::InputCommand, false);
     assert!(matches!(cmd, Some(Command::InputChar('x'))));
 
-    let cmd = map_key(&key(KeyCode::Enter), PaneId::Console, InputMode::InputCommand);
+    let cmd = map_key(&key(KeyCode::Enter), PaneId::Console, InputMode::InputCommand, false);
     assert!(matches!(cmd, Some(Command::InputSubmit)));
 
-    let cmd = map_key(&key(KeyCode::Esc), PaneId::Console, InputMode::InputCommand);
+    let cmd = map_key(&key(KeyCode::Esc), PaneId::Console, InputMode::InputCommand, false);
     assert!(matches!(cmd, Some(Command::InputCancel)));
 }
 
 #[test]
 fn normal_mode_q_quits() {
-    let cmd = map_key(&key(KeyCode::Char('q')), PaneId::Source, InputMode::Normal);
+    let cmd = map_key(&key(KeyCode::Char('q')), PaneId::Source, InputMode::Normal, false);
     assert!(matches!(cmd, Some(Command::Quit)));
 }
 
 #[test]
 fn normal_mode_tab_next_pane() {
-    let cmd = map_key(&key(KeyCode::Tab), PaneId::Source, InputMode::Normal);
+    let cmd = map_key(&key(KeyCode::Tab), PaneId::Source, InputMode::Normal, false);
     assert!(matches!(cmd, Some(Command::NextPane)));
 }
 
 #[test]
 fn normal_mode_f5_resumes() {
-    let cmd = map_key(&key(KeyCode::F(5)), PaneId::Source, InputMode::Normal);
+    let cmd = map_key(&key(KeyCode::F(5)), PaneId::Source, InputMode::Normal, false);
     assert!(matches!(cmd, Some(Command::ResumeTarget)));
 }
 
 #[test]
 fn normal_mode_ctrl_c_quits() {
-    let cmd = map_key(&ctrl_key(KeyCode::Char('c')), PaneId::Source, InputMode::Normal);
+    let cmd = map_key(&ctrl_key(KeyCode::Char('c')), PaneId::Source, InputMode::Normal, false);
     assert!(matches!(cmd, Some(Command::Quit)));
 }
 
 #[test]
 fn normal_mode_j_scrolls_down() {
-    let cmd = map_key(&key(KeyCode::Char('j')), PaneId::Source, InputMode::Normal);
+    let cmd = map_key(&key(KeyCode::Char('j')), PaneId::Source, InputMode::Normal, false);
     assert!(matches!(cmd, Some(Command::ScrollDown)));
 }
 
@@ -770,6 +773,7 @@ fn normal_mode_a_add_expression_in_expressions_pane() {
         &key(KeyCode::Char('a')),
         PaneId::Expressions,
         InputMode::Normal,
+        false,
     );
     assert!(matches!(cmd, Some(Command::AddExpression)));
 }
@@ -936,6 +940,7 @@ fn normal_mode_shift_backtab_prev_pane() {
         &shift_key(KeyCode::BackTab),
         PaneId::Source,
         InputMode::Normal,
+        false,
     );
     assert!(matches!(cmd, Some(Command::PrevPane)));
 }
