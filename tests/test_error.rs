@@ -50,6 +50,28 @@ fn should_display_register_access_failed() {
     assert_eq!(e.to_string(), "Register access failed: PC not readable");
 }
 
+#[test]
+fn should_display_flash_failed() {
+    let e = ProbeError::FlashFailed("erase timeout".into());
+    assert_eq!(e.to_string(), "Flash failed: erase timeout");
+}
+
+#[test]
+fn should_display_flash_failed_with_detailed_message() {
+    let e = ProbeError::FlashFailed("sector 3 at 0x0800C000: verify mismatch".into());
+    assert_eq!(
+        e.to_string(),
+        "Flash failed: sector 3 at 0x0800C000: verify mismatch"
+    );
+}
+
+#[test]
+fn should_convert_flash_failed_to_app_error() {
+    let probe = ProbeError::FlashFailed("write error".into());
+    let app: AppError = probe.into();
+    assert_eq!(app.to_string(), "Probe error: Flash failed: write error");
+}
+
 // ── Symbol errors ───────────────────────────────────────────────────────
 
 #[test]

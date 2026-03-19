@@ -34,6 +34,8 @@ pub enum ProbeError {
     MemoryWriteFailed { addr: u32, reason: String },
     #[error("Register access failed: {0}")]
     RegisterAccessFailed(String),
+    #[error("Flash failed: {0}")]
+    FlashFailed(String),
 }
 
 #[derive(Error, Debug)]

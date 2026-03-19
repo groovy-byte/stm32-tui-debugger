@@ -1,6 +1,8 @@
+use std::path::Path;
 use std::time::Duration;
 
 use probe_rs::{Permissions, Session};
+use probe_rs::flashing;
 use probe_rs::probe::list::Lister;
 use tracing::{debug, error, info};
 
@@ -137,5 +139,28 @@ impl DebugSession {
         session.core(0).map_err(|e| {
             ProbeError::ConnectionFailed(format!("Failed to access core 0: {e:#}"))
         })
+    }
+
+    /// Flash an ELF file to the target, then reset.
+    pub fn flash(&mut self, elf_path: &Path) -> Result<(), ProbeError> {
+        let session = self.session.as_mut().ok_or(ProbeError::NoSession)?;
+        info!(path = %elf_path.display(), "Flashing firmware");
+
+        flashing::download_file(session, elf_path, flashing::Format::Elf)
+            .map_err(|e| ProbeError::FlashFailed(format!("{e:#}")))?;
+
+        // Reset and run after flashing
+        let mut core = session.core(0).map_err(|e| {
+            ProbeError::FlashFailed(format!("Post-flash core access failed: {e:#}"))
+        })?;
+        core.reset_and_halt(Duration::from_millis(100)).map_err(|e| {
+            ProbeError::FlashFailed(format!("Post-flash reset failed: {e:#}"))
+        })?;
+        core.run().map_err(|e| {
+            ProbeError::FlashFailed(format!("Post-flash resume failed: {e:#}"))
+        })?;
+
+        info!("Flash complete, target running");
+        Ok(())
     }
 }

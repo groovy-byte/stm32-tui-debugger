@@ -344,3 +344,39 @@ fn should_map_tab_from_all_panes() {
         );
     }
 }
+
+// ── Keybinding: F8 flash ────────────────────────────────────────────────
+
+#[test]
+fn should_map_f8_to_flash_firmware() {
+    let cmd = map_key(&key(KeyCode::F(8)), PaneId::Source, InputMode::Normal, false);
+    assert!(matches!(cmd, Some(Command::FlashFirmware)));
+}
+
+#[test]
+fn should_map_f8_to_flash_from_all_panes() {
+    for pane in PaneId::all() {
+        let cmd = map_key(&key(KeyCode::F(8)), *pane, InputMode::Normal, false);
+        assert!(
+            matches!(cmd, Some(Command::FlashFirmware)),
+            "F8 should flash in {pane:?}"
+        );
+    }
+}
+
+#[test]
+fn should_not_map_f8_in_input_mode() {
+    let cmd = map_key(
+        &key(KeyCode::F(8)),
+        PaneId::Source,
+        InputMode::InputExpression,
+        false,
+    );
+    assert!(cmd.is_none(), "F8 should not trigger flash during input mode");
+}
+
+#[test]
+fn should_map_f8_independent_of_completion_state() {
+    let cmd = map_key(&key(KeyCode::F(8)), PaneId::Expressions, InputMode::Normal, true);
+    assert!(matches!(cmd, Some(Command::FlashFirmware)));
+}

@@ -21,6 +21,7 @@ pub enum Command {
     StepInto,
     RefreshTasks,
     InspectTask,
+    FlashFirmware,
 
     // Input mode commands
     InputChar(char),
@@ -51,6 +52,7 @@ pub fn map_key(key: &KeyEvent, focused: PaneId, input_mode: InputMode, completio
         (KeyModifiers::NONE, KeyCode::F(5)) => return Some(Command::ResumeTarget),
         (KeyModifiers::NONE, KeyCode::F(6)) => return Some(Command::HaltTarget),
         (KeyModifiers::NONE, KeyCode::F(7)) => return Some(Command::ResetTarget),
+        (KeyModifiers::NONE, KeyCode::F(8)) => return Some(Command::FlashFirmware),
         (KeyModifiers::NONE, KeyCode::F(10)) => return Some(Command::StepOver),
         (KeyModifiers::NONE, KeyCode::F(11)) => return Some(Command::StepInto),
         _ => {}

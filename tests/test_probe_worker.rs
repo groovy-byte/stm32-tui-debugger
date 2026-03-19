@@ -93,6 +93,20 @@ mod probe_handle_error_paths {
     }
 
     #[tokio::test]
+    async fn should_return_no_session_when_flash_on_dead_worker() {
+        let handle = ProbeHandle::dead();
+        let result = handle.flash(std::path::PathBuf::from("/nonexistent/firmware.elf")).await;
+        assert!(matches!(result, Err(ProbeError::NoSession)));
+    }
+
+    #[tokio::test]
+    async fn should_return_no_session_when_flash_empty_path_on_dead_worker() {
+        let handle = ProbeHandle::dead();
+        let result = handle.flash(std::path::PathBuf::new()).await;
+        assert!(matches!(result, Err(ProbeError::NoSession)));
+    }
+
+    #[tokio::test]
     async fn should_return_empty_vec_when_batch_is_empty_on_dead_worker() {
         let handle = ProbeHandle::dead();
         let result = handle.read_memory_batch(vec![]).await;
@@ -124,6 +138,7 @@ mod probe_handle_concurrent {
             let _ = handle.halt().await;
             let _ = handle.resume().await;
             let _ = handle.reset().await;
+            let _ = handle.flash(std::path::PathBuf::from("/tmp/test.elf")).await;
         }
     }
 
@@ -199,6 +214,14 @@ mod freeze_regression {
     }
 
     #[tokio::test]
+    async fn should_complete_flash_within_deadline_when_worker_dead() {
+        let handle = ProbeHandle::dead();
+        let path = std::path::PathBuf::from("/tmp/test.elf");
+        let result = tokio::time::timeout(Duration::from_millis(100), handle.flash(path)).await;
+        assert!(result.is_ok(), "flash() must not block when worker is dead");
+    }
+
+    #[tokio::test]
     async fn should_complete_read_memory_batch_within_deadline_when_worker_dead() {
         let handle = ProbeHandle::dead();
         let result =
@@ -231,6 +254,7 @@ mod freeze_regression {
             let _ = handle.halt().await;
             let _ = handle.resume().await;
             let _ = handle.reset().await;
+            let _ = handle.flash(std::path::PathBuf::from("/tmp/test.elf")).await;
             let _ = handle.read_memory_batch(vec![]).await;
             let _ = handle
                 .read_rtos_snapshot(sample_rtos_addrs(), TcbLayout::default())

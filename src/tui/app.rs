@@ -62,7 +62,7 @@ pub fn draw(f: &mut Frame, state: &TuiState) {
 fn draw_status_bar(f: &mut Frame, area: Rect, state: &TuiState) {
     let status = match &state.status_message {
         Some(msg) => msg.as_str(),
-        None => "Tab: switch pane | F5: resume | F6: halt | F7: reset | q: quit",
+        None => "Tab: switch pane | F5: resume | F6: halt | F7: reset | F8: flash | q: quit",
     };
     let bar = Paragraph::new(Span::styled(status, Style::default().fg(Color::White)))
         .style(Style::default().bg(Color::DarkGray));

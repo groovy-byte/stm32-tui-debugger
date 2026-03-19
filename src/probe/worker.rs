@@ -4,6 +4,7 @@
 //! always processed before read commands, so the UI never waits behind a long
 //! RTOS snapshot scan.
 
+use std::path::PathBuf;
 use std::sync::mpsc;
 use std::thread;
 use std::time::Duration;
@@ -45,6 +46,7 @@ enum CtrlCmd {
     Halt(oneshot::Sender<Result<(), ProbeError>>),
     Resume(oneshot::Sender<Result<(), ProbeError>>),
     Reset(oneshot::Sender<Result<(), ProbeError>>),
+    Flash(PathBuf, oneshot::Sender<Result<(), ProbeError>>),
     Shutdown,
 }
 
@@ -107,6 +109,14 @@ impl ProbeHandle {
         let (tx, rx) = oneshot::channel();
         self.ctrl_tx
             .send(CtrlCmd::Reset(tx))
+            .map_err(|_| ProbeError::NoSession)?;
+        rx.await.map_err(|_| ProbeError::NoSession)?
+    }
+
+    pub async fn flash(&self, elf_path: PathBuf) -> Result<(), ProbeError> {
+        let (tx, rx) = oneshot::channel();
+        self.ctrl_tx
+            .send(CtrlCmd::Flash(elf_path, tx))
             .map_err(|_| ProbeError::NoSession)?;
         rx.await.map_err(|_| ProbeError::NoSession)?
     }
@@ -174,6 +184,9 @@ fn worker_main(
                 }
                 Ok(CtrlCmd::Reset(reply)) => {
                     let _ = reply.send(session.reset());
+                }
+                Ok(CtrlCmd::Flash(path, reply)) => {
+                    let _ = reply.send(session.flash(&path));
                 }
                 Ok(CtrlCmd::Shutdown) => {
                     debug!("Probe worker shutting down");

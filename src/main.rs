@@ -1,4 +1,5 @@
 use std::io;
+use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Duration;
 
@@ -189,7 +190,7 @@ async fn run_app(
                                 tui_state.completion.is_active(),
                             );
                             if let Some(cmd) = cmd {
-                                if handle_command(cmd, &mut tui_state, &probe, &symbols, &cmd_tx).await {
+                                if handle_command(cmd, &mut tui_state, &probe, &symbols, &cmd_tx, &config.elf_path).await {
                                     break; // Quit requested
                                 }
                             }
@@ -267,6 +268,7 @@ async fn handle_command(
     probe: &ProbeHandle,
     symbols: &Option<Arc<SymbolEngine>>,
     cmd_tx: &mpsc::Sender<PollerCommand>,
+    elf_path: &PathBuf,
 ) -> bool {
     match cmd {
         Command::Quit => return true,
@@ -321,6 +323,27 @@ async fn handle_command(
                     .console_state
                     .lines
                     .push_back(format!("[ERROR] Reset failed: {e}")),
+            }
+        }
+
+        Command::FlashFirmware => {
+            state.status_message = Some("⚡ Flashing firmware...".into());
+            state.console_state.lines.push_back(format!(
+                "[INFO] Flashing: {}", elf_path.display()
+            ));
+            match probe.flash(elf_path.clone()).await {
+                Ok(()) => {
+                    state.console_state.lines.push_back(
+                        "[INFO] ✓ Flash complete — target reset and running".into()
+                    );
+                    state.status_message = None;
+                }
+                Err(e) => {
+                    state.console_state.lines.push_back(
+                        format!("[ERROR] Flash failed: {e}")
+                    );
+                    state.status_message = None;
+                }
             }
         }
 
