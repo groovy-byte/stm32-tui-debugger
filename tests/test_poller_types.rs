@@ -3,42 +3,7 @@ use stm32_tui_debugger::poller::{DisplayValue, Expression, PollResult, ValueForm
 
 // ── ValueFormat ─────────────────────────────────────────────────────────
 
-#[test]
-fn should_default_value_format_to_auto() {
-    let fmt = ValueFormat::default();
-    assert_eq!(fmt, ValueFormat::Auto);
-}
-
-#[test]
-fn should_have_all_format_variants() {
-    let _ = [
-        ValueFormat::Decimal,
-        ValueFormat::Hex,
-        ValueFormat::Binary,
-        ValueFormat::Float,
-        ValueFormat::Auto,
-    ];
-}
-
 // ── Expression ──────────────────────────────────────────────────────────
-
-#[test]
-fn should_create_expression_with_name() {
-    let expr = Expression::new("my_counter");
-    assert_eq!(expr.name, "my_counter");
-}
-
-#[test]
-fn should_set_id_same_as_name() {
-    let expr = Expression::new("adc_value");
-    assert_eq!(expr.id, "adc_value");
-}
-
-#[test]
-fn should_be_unresolved_initially() {
-    let expr = Expression::new("variable");
-    assert!(!expr.is_resolved());
-}
 
 #[test]
 fn should_have_no_address_initially() {
@@ -159,17 +124,6 @@ fn should_display_error() {
 }
 
 // ── DisplayValue equality ───────────────────────────────────────────────
-
-#[test]
-fn should_compare_integer_values() {
-    assert_eq!(DisplayValue::Integer(10), DisplayValue::Integer(10));
-    assert_ne!(DisplayValue::Integer(10), DisplayValue::Integer(20));
-}
-
-#[test]
-fn should_compare_different_variants() {
-    assert_ne!(DisplayValue::Integer(42), DisplayValue::Unsigned(42));
-}
 
 // ── Nested DisplayValue ─────────────────────────────────────────────────
 

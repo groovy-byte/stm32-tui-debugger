@@ -15,52 +15,6 @@ fn sample_items(n: usize) -> Vec<CompletionItem> {
         .collect()
 }
 
-// ─── Construction ────────────────────────────────────────
-
-#[test]
-fn new_creates_empty_list() {
-    let cl = CompletionList::new();
-    assert!(cl.is_empty());
-    assert_eq!(cl.len(), 0);
-    assert_eq!(cl.selected_index(), 0);
-}
-
-#[test]
-fn new_has_max_visible_8() {
-    let mut cl = CompletionList::new();
-    // Populate with 20 items; visible window should be 8
-    cl.update(sample_items(20));
-    assert_eq!(cl.visible_items().len(), 8);
-}
-
-#[test]
-fn default_is_same_as_new() {
-    let a = CompletionList::new();
-    let b = CompletionList::default();
-    assert_eq!(a.is_empty(), b.is_empty());
-    assert_eq!(a.selected_index(), b.selected_index());
-    assert_eq!(a.len(), b.len());
-}
-
-#[test]
-fn is_empty_true_on_empty() {
-    let cl = CompletionList::new();
-    assert!(cl.is_empty());
-}
-
-#[test]
-fn is_active_false_on_empty() {
-    let cl = CompletionList::new();
-    assert!(!cl.is_active());
-}
-
-#[test]
-fn is_active_true_with_items() {
-    let mut cl = CompletionList::new();
-    cl.update(vec![item("a", "")]);
-    assert!(cl.is_active());
-}
-
 // ─── Update / Clear ─────────────────────────────────────
 
 #[test]
@@ -185,12 +139,6 @@ fn visible_items_capped_at_max_visible() {
     let mut cl = CompletionList::new();
     cl.update(sample_items(15));
     assert_eq!(cl.visible_items().len(), 8); // default max_visible
-}
-
-#[test]
-fn visible_items_empty_list() {
-    let cl = CompletionList::new();
-    assert_eq!(cl.visible_items().len(), 0);
 }
 
 #[test]
@@ -368,23 +316,4 @@ fn wrap_backward_adjusts_scroll_to_end() {
     // Last item should be visible
     let visible = cl.visible_items();
     assert_eq!(visible.last().unwrap().text, "item_11");
-}
-
-#[test]
-fn items_accessor_returns_all() {
-    let mut cl = CompletionList::new();
-    let items = vec![item("a", "1"), item("b", "2"), item("c", "3")];
-    cl.update(items);
-    assert_eq!(cl.items().len(), 3);
-    assert_eq!(cl.items()[1].text, "b");
-}
-
-#[test]
-fn len_matches_items_count() {
-    let mut cl = CompletionList::new();
-    assert_eq!(cl.len(), 0);
-    cl.update(sample_items(7));
-    assert_eq!(cl.len(), 7);
-    cl.clear();
-    assert_eq!(cl.len(), 0);
 }

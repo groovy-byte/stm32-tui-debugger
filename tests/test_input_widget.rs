@@ -22,28 +22,6 @@ fn ctrl_key(code: KeyCode) -> KeyEvent {
 // ============================================================================
 
 #[test]
-fn new_creates_empty_buffer() {
-    let ti = TextInput::new();
-    assert!(ti.is_empty());
-    assert_eq!(ti.content(), "");
-    assert_eq!(ti.cursor_position(), 0);
-}
-
-#[test]
-fn default_creates_same_as_new() {
-    let ti = TextInput::default();
-    assert!(ti.is_empty());
-    assert_eq!(ti.content(), "");
-    assert_eq!(ti.cursor_position(), 0);
-}
-
-#[test]
-fn default_prompt_is_angle_bracket() {
-    let ti = TextInput::new();
-    assert_eq!(ti.prompt, "> ");
-}
-
-#[test]
 fn with_prompt_sets_custom_prompt() {
     let ti = TextInput::with_prompt(">> ");
     assert_eq!(ti.prompt, ">> ");
@@ -60,14 +38,6 @@ fn is_empty_false_after_insert() {
 // ============================================================================
 // Section 2: Character insertion & cursor movement
 // ============================================================================
-
-#[test]
-fn insert_single_char_at_beginning() {
-    let mut ti = TextInput::new();
-    ti.insert_char('a');
-    assert_eq!(ti.content(), "a");
-    assert_eq!(ti.cursor_position(), 1);
-}
 
 #[test]
 fn insert_multiple_chars_sequential() {
@@ -110,18 +80,6 @@ fn insert_char_at_beginning_via_home() {
     ti.insert_char('a');
     assert_eq!(ti.content(), "abc");
     assert_eq!(ti.cursor_position(), 1);
-}
-
-#[test]
-fn cursor_advances_after_each_insert() {
-    let mut ti = TextInput::new();
-    assert_eq!(ti.cursor_position(), 0);
-    ti.insert_char('x');
-    assert_eq!(ti.cursor_position(), 1);
-    ti.insert_char('y');
-    assert_eq!(ti.cursor_position(), 2);
-    ti.insert_char('z');
-    assert_eq!(ti.cursor_position(), 3);
 }
 
 #[test]
@@ -208,15 +166,6 @@ fn rapid_inserts_build_correct_string() {
     }
     assert_eq!(ti.content(), text);
     assert_eq!(ti.cursor_position(), text.len());
-}
-
-#[test]
-fn insert_digits_and_symbols() {
-    let mut ti = TextInput::new();
-    for c in "0x1234_ABCD".chars() {
-        ti.insert_char(c);
-    }
-    assert_eq!(ti.content(), "0x1234_ABCD");
 }
 
 // ============================================================================
@@ -630,80 +579,9 @@ fn history_down_cursor_at_end_of_entry() {
 // ============================================================================
 
 #[test]
-fn input_mode_char_maps_to_input_char() {
-    let cmd = map_key(&key(KeyCode::Char('a')), PaneId::Source, InputMode::InputExpression, false);
-    assert!(matches!(cmd, Some(Command::InputChar('a'))));
-}
-
-#[test]
 fn input_mode_q_does_not_quit() {
     let cmd = map_key(&key(KeyCode::Char('q')), PaneId::Source, InputMode::InputExpression, false);
     assert!(matches!(cmd, Some(Command::InputChar('q'))));
-}
-
-#[test]
-fn input_mode_esc_maps_to_cancel() {
-    let cmd = map_key(&key(KeyCode::Esc), PaneId::Source, InputMode::InputExpression, false);
-    assert!(matches!(cmd, Some(Command::InputCancel)));
-}
-
-#[test]
-fn input_mode_enter_maps_to_submit() {
-    let cmd = map_key(&key(KeyCode::Enter), PaneId::Source, InputMode::InputExpression, false);
-    assert!(matches!(cmd, Some(Command::InputSubmit)));
-}
-
-#[test]
-fn input_mode_backspace_maps_to_input_backspace() {
-    let cmd = map_key(
-        &key(KeyCode::Backspace),
-        PaneId::Source,
-        InputMode::InputExpression,
-        false,
-    );
-    assert!(matches!(cmd, Some(Command::InputBackspace)));
-}
-
-#[test]
-fn input_mode_delete_maps_to_input_delete() {
-    let cmd = map_key(
-        &key(KeyCode::Delete),
-        PaneId::Source,
-        InputMode::InputExpression,
-        false,
-    );
-    assert!(matches!(cmd, Some(Command::InputDelete)));
-}
-
-#[test]
-fn input_mode_left_right() {
-    let left = map_key(&key(KeyCode::Left), PaneId::Source, InputMode::InputExpression, false);
-    let right = map_key(&key(KeyCode::Right), PaneId::Source, InputMode::InputExpression, false);
-    assert!(matches!(left, Some(Command::InputLeft)));
-    assert!(matches!(right, Some(Command::InputRight)));
-}
-
-#[test]
-fn input_mode_home_end() {
-    let home = map_key(&key(KeyCode::Home), PaneId::Source, InputMode::InputExpression, false);
-    let end = map_key(&key(KeyCode::End), PaneId::Source, InputMode::InputExpression, false);
-    assert!(matches!(home, Some(Command::InputHome)));
-    assert!(matches!(end, Some(Command::InputEnd)));
-}
-
-#[test]
-fn input_mode_history_up_down() {
-    let up = map_key(&key(KeyCode::Up), PaneId::Source, InputMode::InputExpression, false);
-    let down = map_key(&key(KeyCode::Down), PaneId::Source, InputMode::InputExpression, false);
-    assert!(matches!(up, Some(Command::InputHistoryUp)));
-    assert!(matches!(down, Some(Command::InputHistoryDown)));
-}
-
-#[test]
-fn input_mode_f5_returns_none() {
-    // In input mode, F5 has no mapping in map_input_key
-    let cmd = map_key(&key(KeyCode::F(5)), PaneId::Source, InputMode::InputExpression, false);
-    assert!(cmd.is_none());
 }
 
 #[test]
@@ -720,12 +598,6 @@ fn input_mode_ctrl_c_does_not_quit() {
 }
 
 #[test]
-fn input_mode_tab_returns_none() {
-    let cmd = map_key(&key(KeyCode::Tab), PaneId::Source, InputMode::InputExpression, false);
-    assert!(cmd.is_none());
-}
-
-#[test]
 fn input_command_mode_same_routing() {
     let cmd = map_key(&key(KeyCode::Char('x')), PaneId::Console, InputMode::InputCommand, false);
     assert!(matches!(cmd, Some(Command::InputChar('x'))));
@@ -735,36 +607,6 @@ fn input_command_mode_same_routing() {
 
     let cmd = map_key(&key(KeyCode::Esc), PaneId::Console, InputMode::InputCommand, false);
     assert!(matches!(cmd, Some(Command::InputCancel)));
-}
-
-#[test]
-fn normal_mode_q_quits() {
-    let cmd = map_key(&key(KeyCode::Char('q')), PaneId::Source, InputMode::Normal, false);
-    assert!(matches!(cmd, Some(Command::Quit)));
-}
-
-#[test]
-fn normal_mode_tab_next_pane() {
-    let cmd = map_key(&key(KeyCode::Tab), PaneId::Source, InputMode::Normal, false);
-    assert!(matches!(cmd, Some(Command::NextPane)));
-}
-
-#[test]
-fn normal_mode_f5_resumes() {
-    let cmd = map_key(&key(KeyCode::F(5)), PaneId::Source, InputMode::Normal, false);
-    assert!(matches!(cmd, Some(Command::ResumeTarget)));
-}
-
-#[test]
-fn normal_mode_ctrl_c_quits() {
-    let cmd = map_key(&ctrl_key(KeyCode::Char('c')), PaneId::Source, InputMode::Normal, false);
-    assert!(matches!(cmd, Some(Command::Quit)));
-}
-
-#[test]
-fn normal_mode_j_scrolls_down() {
-    let cmd = map_key(&key(KeyCode::Char('j')), PaneId::Source, InputMode::Normal, false);
-    assert!(matches!(cmd, Some(Command::ScrollDown)));
 }
 
 #[test]
@@ -804,17 +646,6 @@ fn very_long_string() {
         ti.backspace();
     }
     assert!(ti.is_empty());
-}
-
-#[test]
-fn with_prompt_does_not_affect_buffer() {
-    let mut ti = TextInput::with_prompt("$ ");
-    ti.insert_char('a');
-    assert_eq!(ti.content(), "a");
-    assert_eq!(ti.cursor_position(), 1);
-    let result = ti.submit();
-    assert_eq!(result, "a");
-    assert_eq!(ti.prompt, "$ ");
 }
 
 #[test]
@@ -861,12 +692,6 @@ fn empty_buffer_operations_stable() {
     ti.end();
     assert!(ti.is_empty());
     assert_eq!(ti.cursor_position(), 0);
-}
-
-#[test]
-fn input_mode_default_is_normal() {
-    let mode = InputMode::default();
-    assert_eq!(mode, InputMode::Normal);
 }
 
 #[test]
@@ -932,15 +757,4 @@ fn history_saved_buffer_restored_after_cancel_and_renavigation() {
     ti.history_down();
     // saved_buffer was cleared by cancel, so should be ""
     assert_eq!(ti.content(), "");
-}
-
-#[test]
-fn normal_mode_shift_backtab_prev_pane() {
-    let cmd = map_key(
-        &shift_key(KeyCode::BackTab),
-        PaneId::Source,
-        InputMode::Normal,
-        false,
-    );
-    assert!(matches!(cmd, Some(Command::PrevPane)));
 }

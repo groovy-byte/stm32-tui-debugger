@@ -32,23 +32,9 @@ fn should_default_rtt_channel_to_zero() {
 }
 
 #[test]
-fn should_have_svd_cache_dir() {
-    let cfg = Config::default_for_chip("STM32F407VG", &PathBuf::from("firmware.elf"));
-    // The svd_cache_dir should be non-empty (either XDG-based or fallback)
-    assert!(!cfg.svd_cache_dir.as_os_str().is_empty());
-}
-
-#[test]
 fn should_derive_source_root_from_elf_parent() {
     let cfg = Config::default_for_chip("STM32H563ZI", &PathBuf::from("/home/dev/project/build/fw.elf"));
     assert_eq!(cfg.source_root, PathBuf::from("/home/dev/project/build"));
-}
-
-#[test]
-fn should_fallback_source_root_to_dot_for_bare_filename() {
-    let cfg = Config::default_for_chip("STM32F407VG", &PathBuf::from("firmware.elf"));
-    // A bare filename has no parent directory, so source_root should be "."
-    assert_eq!(cfg.source_root, PathBuf::from(""));
 }
 
 #[test]

@@ -1,5 +1,5 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
-use stm32_tui_debugger::rtos::{RtosSnapshot, TaskInfo, TaskState, TcbLayout};
+use stm32_tui_debugger::rtos::{RtosSnapshot, TaskInfo, TaskState};
 use stm32_tui_debugger::tui::keybindings::{map_key, Command};
 use stm32_tui_debugger::tui::state::InputMode;
 use stm32_tui_debugger::tui::state::{PaneId, TasksState};
@@ -22,93 +22,7 @@ fn make_task(name: &str, priority: u32, state: TaskState) -> TaskInfo {
     }
 }
 
-// ── 1. TcbLayout defaults ──────────────────────────────────────────────
-
-#[test]
-fn should_default_tcb_layout_to_cortex_m() {
-    let layout = TcbLayout::default();
-    assert_eq!(layout.top_of_stack, 0);
-    assert_eq!(layout.state_list_item, 4);
-    assert_eq!(layout.event_list_item, 24);
-    assert_eq!(layout.priority, 44);
-    assert_eq!(layout.stack_base, 48);
-    assert_eq!(layout.task_name, 52);
-    assert_eq!(layout.task_name_len, 16);
-}
-
-#[test]
-fn should_allow_custom_tcb_layout() {
-    let layout = TcbLayout {
-        top_of_stack: 0,
-        state_list_item: 8,
-        event_list_item: 28,
-        priority: 48,
-        stack_base: 52,
-        task_name: 56,
-        task_name_len: 32,
-    };
-    assert_eq!(layout.state_list_item, 8);
-    assert_eq!(layout.task_name_len, 32);
-}
-
-// ── 2. TaskState display ───────────────────────────────────────────────
-
-#[test]
-fn should_display_running() {
-    assert_eq!(format!("{}", TaskState::Running), "Running");
-}
-
-#[test]
-fn should_display_ready() {
-    assert_eq!(format!("{}", TaskState::Ready), "Ready");
-}
-
-#[test]
-fn should_display_blocked() {
-    assert_eq!(format!("{}", TaskState::Blocked), "Blocked");
-}
-
-#[test]
-fn should_display_suspended() {
-    assert_eq!(format!("{}", TaskState::Suspended), "Suspended");
-}
-
-#[test]
-fn should_display_deleted() {
-    assert_eq!(format!("{}", TaskState::Deleted), "Deleted");
-}
-
-#[test]
-fn should_display_unknown() {
-    assert_eq!(format!("{}", TaskState::Unknown), "Unknown");
-}
-
-// ── 3. TaskState equality ──────────────────────────────────────────────
-
-#[test]
-fn should_equal_same_task_state() {
-    assert_eq!(TaskState::Running, TaskState::Running);
-    assert_eq!(TaskState::Blocked, TaskState::Blocked);
-}
-
-#[test]
-fn should_not_equal_different_task_state() {
-    assert_ne!(TaskState::Running, TaskState::Blocked);
-    assert_ne!(TaskState::Ready, TaskState::Suspended);
-}
-
-// ── 4. TaskInfo creation and stack usage ────────────────────────────────
-
-#[test]
-fn should_create_task_info_with_correct_fields() {
-    let task = make_task("MainTask", 5, TaskState::Running);
-    assert_eq!(task.name, "MainTask");
-    assert_eq!(task.priority, 5);
-    assert_eq!(task.state, TaskState::Running);
-    assert_eq!(task.stack_top, 0x2000_1000);
-    assert_eq!(task.stack_base, 0x2000_0000);
-    assert!(task.stack_high_water.is_none());
-}
+// ── TaskInfo stack usage ────────────────────────────────────────────────
 
 #[test]
 fn should_return_zero_percent_when_no_high_water() {

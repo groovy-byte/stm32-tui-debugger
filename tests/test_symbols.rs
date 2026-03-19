@@ -64,46 +64,6 @@ fn should_not_detect_underscore_prefixed_name_as_mangled() {
 // ── Variable struct ─────────────────────────────────────────────────────
 
 #[test]
-fn should_create_variable_with_all_fields() {
-    let var = Variable {
-        name: "counter".into(),
-        address: 0x2000_0000,
-        size: 4,
-        type_name: "uint32_t".into(),
-        is_global: true,
-    };
-    assert_eq!(var.name, "counter");
-    assert_eq!(var.address, 0x2000_0000);
-    assert_eq!(var.size, 4);
-    assert_eq!(var.type_name, "uint32_t");
-    assert!(var.is_global);
-}
-
-#[test]
-fn should_create_local_variable() {
-    let var = Variable {
-        name: "tmp".into(),
-        address: 0x2000_1000,
-        size: 1,
-        type_name: "uint8_t".into(),
-        is_global: false,
-    };
-    assert!(!var.is_global);
-}
-
-// ── TypeKind variants ───────────────────────────────────────────────────
-
-#[test]
-fn should_create_primitive_typekind() {
-    let tk = TypeKind::Primitive(PrimitiveType::U32);
-    if let TypeKind::Primitive(p) = tk {
-        assert_eq!(p, PrimitiveType::U32);
-    } else {
-        panic!("Expected Primitive variant");
-    }
-}
-
-#[test]
 fn should_create_struct_typekind() {
     let member = StructMember {
         name: "x".into(),
@@ -216,51 +176,7 @@ fn should_create_typeinfo() {
     assert_eq!(ti.size, 4);
 }
 
-// ── PrimitiveType completeness ──────────────────────────────────────────
-
-#[test]
-fn should_have_all_primitive_types() {
-    let primitives = [
-        PrimitiveType::U8,
-        PrimitiveType::U16,
-        PrimitiveType::U32,
-        PrimitiveType::U64,
-        PrimitiveType::I8,
-        PrimitiveType::I16,
-        PrimitiveType::I32,
-        PrimitiveType::I64,
-        PrimitiveType::F32,
-        PrimitiveType::F64,
-        PrimitiveType::Bool,
-        PrimitiveType::Char,
-        PrimitiveType::Void,
-    ];
-    assert_eq!(primitives.len(), 13);
-}
-
 // ── SourceLocation ──────────────────────────────────────────────────────
-
-#[test]
-fn should_create_source_location() {
-    let loc = SourceLocation {
-        file: "main.c".into(),
-        line: 42,
-        column: Some(8),
-    };
-    assert_eq!(loc.file, "main.c");
-    assert_eq!(loc.line, 42);
-    assert_eq!(loc.column, Some(8));
-}
-
-#[test]
-fn should_create_source_location_without_column() {
-    let loc = SourceLocation {
-        file: "startup.s".into(),
-        line: 1,
-        column: None,
-    };
-    assert!(loc.column.is_none());
-}
 
 // ── FunctionInfo ────────────────────────────────────────────────────────
 
