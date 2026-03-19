@@ -1,0 +1,43 @@
+[package]
+name = "stm32-tui-debugger"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# TUI and Terminal Handling
+ratatui = "0.26"
+crossterm = "0.27"
+
+# Hardware Interface
+probe-rs = "0.23"
+
+# Async Runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Symbol and ELF Parsing
+gimli = "0.28"
+addr2line = "0.21"
+object = "0.32"
+cpp_demangle = "0.4"
+
+# Peripheral Parsing
+svd-parser = "0.14"
+
+# Memory Safety and Bitfields
+zerocopy = "0.7"
+bitfield-struct = "0.5"
+
+# Utilities
+anyhow = "1.0"
+thiserror = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.8"
+reqwest = { version = "0.11", features = ["blocking"] }
+async-trait = "0.1"
+tracing = "0.1"
+directories = "5.0"
+clap = { version = "4.4", features = ["derive"] }
+
+[features]
+default = []
+test-support = []
